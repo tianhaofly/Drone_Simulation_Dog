@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- MAVROS posix SITL环境启动脚本 -->
+    <!-- 只启动PX4 SITL和MAVROS，不启动Gazebo世界 -->
+    <!-- 防止和狗的gazebo冲突-->
+    
+    <!-- 是否使用摄像头 -->
+    <arg name="with_camera" default="true"/>
+    
+    <!-- 无人机位置（相对于已运行的Gazebo世界） -->
+    <arg name="x" default="0"/>
+    <arg name="y" default="1.0"/>  <!-- 在狗前面2米 -->
+    <arg name="z" default="1.5"/>  <!-- 高度1.5米 -->
+    <arg name="R" default="0"/>
+    <arg name="P" default="0"/>
+    <arg name="Y" default="0"/>
+    
+    <!-- 无人机型号和配置 -->
+    <arg name="est" default="ekf2"/>
+    <arg name="vehicle" default="iris"/>
+    
+    <!-- 根据是否使用摄像头选择不同的sdf文件 -->
+    <arg name="sdf" default="$(find mavlink_sitl_gazebo)/models/iris_with_camera/iris_with_camera.sdf" if="$(arg with_camera)"/>
+    <arg name="sdf" default="$(find mavlink_sitl_gazebo)/models/$(arg vehicle)/$(arg vehicle).sdf" unless="$(arg with_camera)"/>
+
+    <!-- Gazebo配置 -->
+    <arg name="gui" default="false"/>  <!-- 修改：不启动GUI -->
+    <arg name="debug" default="false"/>
+    <arg name="verbose" default="false"/>
+    <arg name="paused" default="false"/>
+    <arg name="respawn_gazebo" default="false"/>
+    
+    <!-- MAVROS配置 -->
+    <arg name="fcu_url" default="udp://:14540@localhost:14557"/>
+    <arg name="respawn_mavros" default="false"/>
+    
+    <!-- PX4配置 -->
+    <arg name="interactive" default="false"/>  <!-- 修改：非交互模式 -->
+    
+    <!-- ============================== 关键修改：修改posix_sitl.launch调用 ============================== -->
+    <!-- 修改PX4启动参数，不启动新的Gazebo -->
+    <include file="$(find px4)/launch/posix_sitl.launch">
+        <arg name="x" value="$(arg x)"/>
+        <arg name="y" value="$(arg y)"/>
+        <arg name="z" value="$(arg z)"/>
+        <arg name="R" value="$(arg R)"/>
+        <arg name="P" value="$(arg P)"/>
+        <arg name="Y" value="$(arg Y)"/>
+        <!-- 关键：world参数设为空，阻止启动新的Gazebo -->
+        <arg name="world" value=""/>
+        <arg name="vehicle" value="$(arg vehicle)"/>
+        <arg name="sdf" value="$(arg sdf)"/>
+        <arg name="gui" value="$(arg gui)"/>
+        <arg name="interactive" value="$(arg interactive)"/>
+        <arg name="debug" value="$(arg debug)"/>
+        <arg name="verbose" value="$(arg verbose)"/>
+        <arg name="paused" value="$(arg paused)"/>
+        <arg name="respawn_gazebo" value="$(arg respawn_gazebo)"/>
+    </include>
+    
+    <!-- MAVROS -->
+    <include file="$(find mavros)/launch/px4.launch">
+        <!-- GCS链接由SITL提供 -->
+        <arg name="gcs_url" value=""/>
+        <arg name="fcu_url" value="$(arg fcu_url)"/>
+        <arg name="respawn_mavros" value="$(arg respawn_mavros)"/>
+    </include>
+    
+    <!-- ============================== 状态信息 ============================== -->
+    <node name="connection_status" pkg="rostopic" type="rostopic" output="screen"
+          args="echo 'Drone system started. Waiting for connection to existing Gazebo...'"/>
+    
+</launch>
