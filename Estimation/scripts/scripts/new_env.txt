@@ -1,0 +1,58 @@
+roslaunch px4 mavros_posix_sitl.launch
+
+catkin_make
+cd /home/dai/workplace3_ok轨迹显示/rl_sar
+pkill -9 gazebo
+pkill -9 gzserver
+pkill -9 gzclient
+pkill -9 roslaunch
+rm -rf ~/.gazebo/models/*
+rm -rf ~/.gazebo/log/*
+pkill gzserver
+pkill gzclient
+sleep 1
+source devel/setup.bash
+roslaunch rl_sar gazebo.launch rname:=go2w
+#开狗控制
+cd /home/dai/workplace3_ok轨迹显示/rl_sar
+source devel/setup.bash
+rosrun rl_sar rl_sim
+#往现有世界导入无人机
+roslaunch px4 mavros_posix_sitl.launch
+
+source devel/setup.bash
+rosrun qr_landing aruco_det_node
+
+source devel/setup.bash
+rosrun qr_landing ar_track_landing
+
+export PX4_DIR=~/PX4_Autopilot
+
+# PX4 Gazebo Classic 仿真环境设置
+#source Tools/simulation/gazebo-classic/setup_gazebo.bash $(pwd) $(pwd)/build/px4_sitl_default
+#export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:$(pwd)
+#export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:$(pwd)/Tools/simulation/gazebo-classic/sitl_gazebo-classic
+source /home/tianhaofly/PX4_Autopilot/Tools/simulation/gazebo-classic/setup_gazebo.bash /home/tianhaofly/PX4_Autopilot /home/tianhaofly/PX4_Autopilot/build/px4_sitl_default
+export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:~/PX4_Autopilot
+export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:~/PX4_Autopilot/Tools/simulation/gazebo-classic/sitl_gazebo-classic
+export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:~/rl_sar/src/rl_sar
+export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:~/rl_sar/src/rl_sar_zoo:$ROS_PACKAGE_PATH
+
+
+打开pxh
+./Tools/mavlink_shell.py udp:127.0.0.1:14540
+Connecting to MAVLINK...
+
+#开启ARUCO
+cd /Drone_ws_ROS1
+source devel/setup.bash
+rosrun qr_landing aruco_det_node
+#订阅节点
+rostopic echo /aruco/pose
+
+
+#开启april
+source /opt/ros/noetic/setup.bash   #source ros 环境
+source ~/workplace3_ok轨迹显示/apriltag_det/devel/setup.bash   #source 识别环境 
+roslaunch apriltag_ros continuous_detection.launch
+

@@ -1,0 +1,36 @@
+<sdf version="1.6">
+  <world name="qr_platform_test_world">
+    <!-- 默认地面和太阳 -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <!-- 直接加载你的带贴图的平台 DAE -->
+    <model name="qr_platform_test">
+      <static>true</static>
+      <!-- 把平台抬高一点，方便看见 -->
+      <pose>0 0 0.2 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <mesh>
+              <!-- 使用我们手写的、单位为米且带贴图的简单平台模型 -->
+              <uri>file://qr_platform_simple.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <collision name="collision">
+          <geometry>
+            <!-- 与平台尺寸一致：0.5m x 0.4m x 0.001m -->
+            <box>
+              <size>0.5 0.4 0.001</size>
+            </box>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+  </world>
+</sdf>

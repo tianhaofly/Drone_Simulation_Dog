@@ -1,0 +1,194 @@
+### 终端1：编译并启动“狗 + Gazebo 世界”
+#先启动狗
+pkill -9 gazebo
+pkill -9 gzserver
+pkill -9 gzclient
+pkill -9 roslaunch
+rm -rf ~/.gazebo/models/*
+rm -rf ~/.gazebo/log/*
+pkill gzserver
+pkill gzclient
+sleep 1
+cd /home/dai/PX4-Autopilot/workplace/rl_sar
+./build.sh              # 如果你的项目就是用这个脚本编译
+source devel/setup.bash
+source /home/dai/PX4-Autopilot/Tools/setup_gazebo.bash /home/dai/PX4-Autopilot /home/dai/PX4-Autopilot/build/px4_sitl_default
+
+roslaunch rl_sar gazebo.launch rname:=go2w
+```
+
+---
+
+### 终端2：启动 PX4 SITL (iris)
+
+```bash
+cd /home/dai/PX4-Autopilot/workplace/rl_sar
+source devel/setup.bash
+source /home/dai/PX4-Autopilot/Tools/setup_gazebo.bash /home/dai/PX4-Autopilot /home/dai/PX4-Autopilot/build/px4_sitl_default
+
+cd /home/dai/PX4-Autopilot
+PX4_SIM_MODEL=iris ./build/px4_sitl_default/bin/px4 ./ROMFS/px4fmu_common -s etc/init.d-posix/rcS
+```
+
+---
+
+### 终端3：在“狗的 Gazebo 世界”里 spawn 一架 iris
+
+```bash
+cd /home/dai/PX4-Autopilot/workplace/rl_sar
+source devel/setup.bash
+source /home/dai/PX4-Autopilot/Tools/setup_gazebo.bash /home/dai/PX4-Autopilot /home/dai/PX4-Autopilot/build/px4_sitl_default
+
+rosrun gazebo_ros spawn_model \
+  -sdf \
+  -file /home/dai/PX4-Autopilot/Tools/sitl_gazebo/models/iris/iris.sdf \
+  -model iris \
+  -x -1 -y -1 -z 1     # 初始化坐标
+  
+  
+```
+#控制狗终端4
+cd /home/dai/PX4-Autopilot/workplace/rl_sar
+source /opt/ros/noetic/setup.bash
+source devel/setup.bash
+rosrun rl_sar rl_sim
+
+#终端5打开mavros
+source /opt/ros/noetic/setup.bash
+source /home/dai/PX4-Autopilot/workplace/rl_sar/devel/setup.bash
+
+roslaunch mavros px4.launch fcu_url:="udp://:14540@localhost:14557"
+
+#终端6打开rqt
+rqt_image_view
+     
+
+#apriltag
+切到apriltag文件夹下
+roslaunch apriltag_ros continuous_detection.launch \
+  -image_topic:=/iris/downward_camera/image_raw
+
+#相对位姿
+rostopic echo /tag_detections
+-----------------------------------------------------以上为旧环境使用方法，新环境看new_env.txt----------------------------------------------
+
+
+--------------------解决无遥控器，GPS不给gazebo中起飞问题-----------------------
+#在PX4终端
+param set COM_ARM_WO_GPS 1
+param set COM_ARM_WO_RC 1
+param set COM_RC_IN_MODE 1
+param set COM_DISARM_PRFLT 0
+param set NAV_RCL_ACT 0
+param set COM_RCL_EXCEPT 4
+param set COM_OBL_ACT 1
+param save
+#此时可以通过MAVROS连PX4控制无人机动作
+#修改限制速度
+param set MPC_XY_VEL_MAX 5.0
+param set MPC_Z_VEL_MAX_UP 2.0
+param set MPC_Z_VEL_MAX_DN 1.0
+#查询限制速度
+param show MPC_XY_VEL_MAX 
+param show MPC_Z_VEL_MAX_UP
+param show MPC_Z_VEL_MAX_DN 
+------------------------------------------------------------------------------
+#不用QGC也可以起飞：
+#旧
+cd /home/dai/PX4-Autopilot/workplace/rl_sar
+source /opt/ros/noetic/setup.bash
+source devel/setup.bash
+rosrun rl_sar px4_takeoff_hover.py _target_alt:=4.0
+#新
+cd /home/dai/PX4-Autopilot/workplace/rl_sar/src/rl_sar/scripts  #以下代码使用中注意调整cd位置
+./px4_takeoff_hover.py _target_alt:=4.0
+#轨迹
+旧
+cd /home/dai/PX4-Autopilot/workplace/rl_sar
+source /opt/ros/noetic/setup.bash
+source devel/setup.bash
+
+rosrun rl_sar px4_traj_circle.py \
+  _radius:=3.0 _omega:=0.50 _dz:=0.0 \
+  _enable_offboard_switch:=false \
+  _enable_arming:=false
+  
+#新
+cd /home/dai/PX4-Autopilot/workplace/rl_sar/src/rl_sar/scripts
+./px4_traj_circle.py \
+  _radius:=3.0 _omega:=0.60 _dz:=2.0 \
+  _enable_offboard_switch:=false \
+  _enable_arming:=false
+ #定点（相对于无人机初始化点）
+cd /home/dai/PX4-Autopilot/workplace/rl_sar
+source /opt/ros/noetic/setup.bash
+source devel/setup.bash
+rosrun rl_sar px4_goto_hover.py
+
+#新
+cd /home/dai/PX4-Autopilot/workplace/rl_sar/src/rl_sar/scripts
+./px4_goto_hover.py
+-------------------------坐标变换节点------------------------------------
+#旧
+cd /home/dai/PX4-Autopilot/workplace/rl_sar
+./build.sh
+source /opt/ros/noetic/setup.bash
+source devel/setup.bash
+chmod +x /home/dai/PX4-Autopilot/workplace/rl_sar/src/rl_sar/scripts/gazebo_pose_transform_node.py
+rosrun rl_sar gazebo_pose_transform_node.py
+-------------------------坐标变换节点（需要画图）------------------------------------
+#旧
+cd /home/dai/PX4-Autopilot/workplace/rl_sar
+./build.sh
+source /opt/ros/noetic/setup.bash
+source devel/setup.bash
+chmod +x /home/dai/PX4-Autopilot/workplace/rl_sar/src/rl_sar/scripts/gazebo_pose_transform_node.py
+rosrun rl_sar gazebo_pose_transform_node.py _enable_plot:=1
+
+#新
+#apriltag专用
+cd /home/dai/PX4-Autopilot/workplace/rl_sar/src/rl_sar/scripts
+./gazebo_pose_transform_node.py _enable_plot:=1
+
+#aruco专用
+cd /home/dai/PX4-Autopilot/workplace/rl_sar/src/rl_sar/scripts
+./trans_for_aruco.py _enable_plot:=1
+
+#查看话题
+rostopic echo /dog_platform_pose  #狗背平台中心
+rostopic echo /uav_downward_camera_pose  #无人机相机中心
+rostopic echo /platform_in_camera  #机器狗相对无人机坐标系位置
+
+
+
+----------------------gazebo原始pid参数调节------------------------------
+#重置
+param reset MPC_XY_P
+param reset MPC_XY_VEL_P
+param reset MPC_XY_VEL_I
+param reset MPC_XY_VEL_D
+param reset MPC_Z_P
+param reset MPC_Z_VEL_P
+param reset MPC_Z_VEL_I
+param reset MPC_Z_VEL_D
+param save
+#查询
+param show MPC_XY_P
+param show MPC_XY_VEL_P
+param show MPC_XY_VEL_I
+param show MPC_XY_VEL_D
+param show MPC_Z_P
+param show MPC_Z_VEL_P
+param show MPC_Z_VEL_I
+param show MPC_Z_VEL_D
+param save
+#设置
+param set MPC_XY_P 0.5
+param set MPC_XY_VEL_P 0.05
+param set MPC_XY_VEL_I 0.01
+param set MPC_XY_VEL_D 0.005
+param set MPC_Z_P 0.5
+param set MPC_Z_VEL_P 0.05
+param set MPC_Z_VEL_I 0.01
+param set MPC_Z_VEL_D 0.005
+param save

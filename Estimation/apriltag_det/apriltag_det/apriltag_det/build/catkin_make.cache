@@ -1,0 +1,2 @@
+apriltag_ros/apriltag_ros
+-DCATKIN_DEVEL_PREFIX=/home/dai/workplace3_ok轨迹显示/apriltag_det/devel -DCMAKE_INSTALL_PREFIX=/home/dai/workplace3_ok轨迹显示/apriltag_det/install -G Unix Makefiles

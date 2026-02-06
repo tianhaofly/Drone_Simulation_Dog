@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <author>generated</author>
+      <authoring_tool>custom</authoring_tool>
+    </contributor>
+    <created>2025-12-09T00:00:00Z</created>
+    <modified>2025-12-09T00:00:00Z</modified>
+    <unit meter="1" name="meter"/>
+    <up_axis>Z_UP</up_axis>
+  </asset>
+
+  <library_images>
+    <image id="qr_platform_tex">
+      <!-- Use the PNG we converted, path is relative to this DAE -->
+      <init_from>23/apriltag_id1_30x30.jpg</init_from>
+    </image>
+  </library_images>
+
+  <library_effects>
+    <effect id="qr_platform_fx">
+      <profile_COMMON>
+        <newparam sid="qr_platform_surface">
+          <surface type="2D">
+            <init_from>qr_platform_tex</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="qr_platform_sampler">
+          <sampler2D>
+            <source>qr_platform_surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <phong>
+            <diffuse>
+              <texture texture="qr_platform_sampler" texcoord="TEXCOORD_0"/>
+            </diffuse>
+            <ambient>
+              <color>0.2 0.2 0.2 1</color>
+            </ambient>
+            <specular>
+              <color>0 0 0 1</color>
+            </specular>
+            <shininess>
+              <float>1.0</float>
+            </shininess>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+
+  <library_materials>
+    <material id="qr_platform_mat" name="qr_platform_mat">
+      <instance_effect url="#qr_platform_fx"/>
+    </material>
+  </library_materials>
+
+  <library_geometries>
+    <geometry id="qr_platform_geom" name="qr_platform">
+      <mesh>
+        <!-- 0.4m x 0.4m square (for 1:1 QR texture), centered at origin -->
+        <source id="qr_platform_positions">
+          <float_array id="qr_platform_positions_array" count="12">-0.20 -0.20 0   0.20 -0.20 0   0.20 0.20 0   -0.20 0.20 0</float_array>
+          <technique_common>
+            <accessor source="#qr_platform_positions_array" count="4" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+
+        <source id="qr_platform_normals">
+          <float_array id="qr_platform_normals_array" count="12">0 0 1   0 0 1   0 0 1   0 0 1</float_array>
+          <technique_common>
+            <accessor source="#qr_platform_normals_array" count="4" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+
+        <source id="qr_platform_texcoords">
+          <!-- Standard UVs: (0,0), (1,0), (1,1), (0,1) -->
+          <float_array id="qr_platform_texcoords_array" count="8">0 0   1 0   1 1   0 1</float_array>
+          <technique_common>
+            <accessor source="#qr_platform_texcoords_array" count="4" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+
+        <vertices id="qr_platform_vertices">
+          <input semantic="POSITION" source="#qr_platform_positions"/>
+        </vertices>
+
+        <!-- Two triangles: (0,1,2) and (0,2,3) -->
+        <triangles count="2" material="qr_platform_mat">
+          <input semantic="VERTEX" source="#qr_platform_vertices" offset="0"/>
+          <input semantic="NORMAL" source="#qr_platform_normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#qr_platform_texcoords" offset="2" set="0"/>
+          <p>0 0 0   1 1 1   2 2 2   0 0 0   2 2 2   3 3 3</p>
+        </triangles>
+      </mesh>
+    </geometry>
+  </library_geometries>
+
+  <library_visual_scenes>
+    <visual_scene id="Scene" name="Scene">
+      <node id="qr_platform_node" name="qr_platform_node">
+        <matrix>1 0 0 0   0 1 0 0   0 0 1 0   0 0 0 1</matrix>
+        <instance_geometry url="#qr_platform_geom">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="qr_platform_mat" target="#qr_platform_mat">
+                <bind_vertex_input semantic="TEXCOORD_0" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+
+  <scene>
+    <instance_visual_scene url="#Scene"/>
+  </scene>
+</COLLADA>
